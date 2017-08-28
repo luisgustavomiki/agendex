@@ -92,6 +92,7 @@ function execute(envelope, blueprint_name, step) {
 
     envelope.blueprint = blueprint_name;
     envelope.step = step; // not actual step
+    envelope.params = blueprint_step.params;
 
     agenda.now(blueprint_step.proc, envelope);    
   } else {

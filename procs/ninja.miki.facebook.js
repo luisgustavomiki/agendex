@@ -35,3 +35,13 @@ function processFacebookFeed (feed, params, cb) {
       cb(err, totalResults);
     }); // async.doUntil
 }
+
+function retrieveAccessToken(credentials, callback) {
+  FB.api('oauth/access_token', {
+    client_id: credentials.client_id,
+    client_secret: credentials.client_secret,
+    grant_type: 'client_credentials'
+  }, function (res) {
+    callback(res.access_token, res.error);
+  }
+}

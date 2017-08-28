@@ -10,8 +10,11 @@
   "license": "MIT",
   "dependencies": {
     "agenda": "^0.9.1",
+    "async": "^2.5.0",
+    "fb": "^2.0.0",
     "js-yaml": "^3.9.1",
     "underscore": "^1.8.3",
+    "url": "^0.11.0",
     "uuid": "^3.1.0"
   }
 }

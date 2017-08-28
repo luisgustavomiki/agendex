@@ -1,20 +1,36 @@
-name: "ninja.miki.get_new_posts_from_page_whitelist"
+name: "ninja.miki.new_posts"
 config: &baseconfig
   mongouri: "mongodb://localhost:27017/omnkt"
 starter:
   method: polling
   every: "5 seconds"
-  proc: "ninja.miki.mongodb.find"
+  proc: "ninja.miki.mongodb.aggregate"
   params: 
     <<: *baseconfig
     collection: "fb_watched_pages"
-    query: {} 
+    query: 
+      { 
+        "$lookup": 
+        {  
+          from: "fb_accounts",
+          localField: "account",
+          foreignField: "_id",
+          as: "account"
+        } 
+      } 
 steps: 
   - break-array
   - proc: "ninja.miki.facebook.fetch_timeline"
     params: 
       bulk?: yes 
-      threshold-field: "last_updated"
+      threshold-property: "last_updated"
+      fbobject-property: "id"
       fields: [caption,created_time,from,full_picture,id,link,message,message_tags,name,status_type,type,updated_time]
       page-limit: 100
+      authentication:
+        type: "credentials"
+        fetch-from: "data"
+        client-id-property: "account.client-id"
+        client-secret-property: "account.client-secret"
+
 

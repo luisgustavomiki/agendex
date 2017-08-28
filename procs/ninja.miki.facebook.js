@@ -1,9 +1,53 @@
 const async = require('async');
 const FB = require('fb');
 const URL = require('url');
+const _ = require('lodash');
 
 module.exports = function(agenda) {
 	agenda.define('ninja.miki.facebook.fetch_timeline', function(job, done) {
+    var envelope = job.attrs.data;
+    var params = envelope.params;
+    var timelines = [];
+
+    if(params['bulk?']) {
+      timelines = envelope.data;
+    } else {
+      timelines = [envelope.data];
+    }
+
+    var fields = params['fields'];
+    var page_limit = params['page-limit'];
+
+    async.eachSeries(timelines, function(tl, callback) {
+      var threshold = _.get(tl, params['threshold-property']);
+
+      if(params.authentication.type == 'credentials') {
+        if(params.authentication['fetch-from'] == 'data') {
+          var client_id = _.get(tl, params.authentication['client-id-property']);
+          var client_secret = _.get(tl, params.authentication['client-secret-property']);
+        } else if(params.authentication['fetch-from'] == 'params') {
+          var client_id = params.authentication['client-id'];
+          var client_secret = params.authentication['client-secret'];
+        }
+
+        retrieveAccessToken({ client_id: client_id, client_secret: client_secret }, function(error, token) {
+          assert.ifError(error);
+          FB.setAccessToken(token);
+
+          var unixtime = threshold.getTime()/1000;
+          var fbparams = { 
+            since: unixtime,
+            fields: fields,
+            limit: page_limit
+          }
+
+          processFacebookFeed (_.get(tl, params['fbobject-property']) + '/feed', fbparams, function(error, data) {
+            assert.ifError(error);
+            envelope.data = data;
+          });
+        });
+      }
+    });
     //console.log(job.attrs.data);
 		console.log("HELLO FROM FETCH TIMELINE");
 		done();
@@ -33,7 +77,8 @@ function processFacebookFeed (feed, params, cb) {
       return done;
     }, function (err) {
       cb(err, totalResults);
-    }); // async.doUntil
+    }
+  ); // async.doUntil
 }
 
 function retrieveAccessToken(credentials, callback) {
@@ -42,6 +87,6 @@ function retrieveAccessToken(credentials, callback) {
     client_secret: credentials.client_secret,
     grant_type: 'client_credentials'
   }, function (res) {
-    callback(res.access_token, res.error);
+    callback(res.error, res.access_token);
   }
 }

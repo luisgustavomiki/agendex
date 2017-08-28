@@ -1,6 +1,6 @@
 const Agenda = require('agenda');
 
-const _ = require("underscore");
+const _ = require("lodash");
 const assert = require('assert');
 const uuidv4 = require('uuid/v4');
 

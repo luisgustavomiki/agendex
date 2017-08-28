@@ -34,9 +34,9 @@ agenda.on('ready', function() {
 	.: Envelope Object Structure :. 
 	
 	{
-    uuid: ""
+    uuid: "", // unique identifier to the event, changes within the orchestration only when child events are spawned
 		blueprint: "blueprint.name", // name of the orchestration the envelope is running.
-		params: {}, // params passed from the configuration to the procedure
+		params: {}, // params passed from the configuration to the procedure, changes every proc call throughout the orchestration run
 		step: 0, // current step this envelope has progressed through the orchestration/blueprint 
 		data: {} // current data from the envelope
 	}
@@ -91,7 +91,7 @@ function execute(envelope, blueprint_name, step) {
     console.log("Dispatching event %s (%s) to proc %s.", envelope.uuid, envelope.blueprint, blueprint_step.proc);
 
     envelope.blueprint = blueprint_name;
-    envelope.step = step; // not actual step
+    envelope.step = step;
     envelope.params = blueprint_step.params;
 
     agenda.now(blueprint_step.proc, envelope);    

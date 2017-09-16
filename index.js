@@ -47,6 +47,17 @@ agenda.on('ready', function() {
 
 */
 
+/*
+  .: Parameter resolving :.
+
+    params: 
+      specific_parameter_1: "foobar" # raw string or any other primitive value
+      specific_parameter_2: { ~filter: "1" } # indicate agendex to fetch from filter
+      specific_parameter_3: { ~data } # fetch from data itself
+      specific_parameter_4: { ~xpath: { ~source: ~data, ~path: "/bookstore/book/title" } }
+      specific_parameter_4: { ~jpath: { ~source: { ~filter: 1 }, ~path: { ~data } } }
+*/
+
 function execute(envelope, blueprint_name, step) {
   if(!envelope.uuid) {
     envelope.uuid = uuidv4();
@@ -98,6 +109,35 @@ function execute(envelope, blueprint_name, step) {
   } else {
     console.log("Execute resolving led to unknown step type.");
   }
+}
+
+function resolveParameter(input, envelope) {
+  if(_.isObject(input)) {
+    if(_.size(input) == 1) {
+      var entries = _.toPairs(input);
+
+      var key = entries[0][0];
+      var value = entries[0][1];
+
+      if(key == "~data") {
+        return envelope.data;
+      }
+
+      if(key == "~filter") {
+        return envelope.filters[value];
+      }
+
+      if(key == "~xpath") {
+
+      }
+
+      if(key == "~jpath") {
+        
+      }
+    }
+  }
+  
+  return input;
 }
 
 function getStepType(blueprint_step) {

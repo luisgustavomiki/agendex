@@ -1,4 +1,5 @@
 name: "ninja.miki.new_posts"
+enabled: false
 config: &baseconfig
   mongouri: "mongodb://localhost:27017/omnkt"
 starter:
@@ -8,16 +9,15 @@ starter:
   params: 
     <<: *baseconfig
     collection: "fb_watched_pages"
-    query: 
-      { 
+    query: '[{ 
         "$lookup": 
         {  
-          from: "fb_accounts",
+          from: "accounts",
           localField: "account",
           foreignField: "_id",
           as: "account"
         } 
-      } 
+      }]'
 steps: 
   - break-array
   - proc: "ninja.miki.facebook.fetch_timeline"

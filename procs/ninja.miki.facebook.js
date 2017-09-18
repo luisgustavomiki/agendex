@@ -2,6 +2,7 @@ const async = require('async');
 const FB = require('fb');
 const URL = require('url');
 const _ = require('lodash');
+var assert = require('assert');
 
 module.exports = function(agenda) {
 	agenda.define('ninja.miki.facebook.fetch_timeline', function(job, done) {
@@ -88,5 +89,5 @@ function retrieveAccessToken(credentials, callback) {
     grant_type: 'client_credentials'
   }, function (res) {
     callback(res.error, res.access_token);
-  }
+  });
 }

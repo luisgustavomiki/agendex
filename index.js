@@ -111,35 +111,6 @@ function execute(envelope, blueprint_name, step) {
   }
 }
 
-function resolveParameter(input, envelope) {
-  if(_.isObject(input)) {
-    if(_.size(input) == 1) {
-      var entries = _.toPairs(input);
-
-      var key = entries[0][0];
-      var value = entries[0][1];
-
-      if(key == "~data") {
-        return envelope.data;
-      }
-
-      if(key == "~filter") {
-        return envelope.filters[value];
-      }
-
-      if(key == "~xpath") {
-
-      }
-
-      if(key == "~jpath") {
-        
-      }
-    }
-  }
-  
-  return input;
-}
-
 function getStepType(blueprint_step) {
   if(_.isString(blueprint_step)) {
     if(blueprint_step == "break-array") {
@@ -163,6 +134,7 @@ agenda.on('complete', function(job) {
   var step_after = step_before + 1;
   var actual_step_after = actual_step_before + 1; // proc array step
 
+  console.log(envelope);
   var next_step = blueprint.steps[actual_step_after];
   if(next_step) {
     execute(envelope, blueprint.name, step_after);

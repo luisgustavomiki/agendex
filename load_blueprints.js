@@ -28,14 +28,16 @@ function getBlueprintsList() {
 function loadBlueprint(agenda, file_path) {
   var blueprint = yaml.safeLoad(fs.readFileSync(file_path, 'utf8'));
 
-  if(blueprint.starter.method === 'polling') {
-    var envelope = { 
-      blueprint: blueprint.name, 
-      params: blueprint.starter.params,
-      step: 0
-    };
+  if(blueprint.enabled) {
+    if(blueprint.starter.method === 'polling') {
+      var envelope = { 
+        blueprint: blueprint.name, 
+        params: blueprint.starter.params,
+        step: 0
+      };
 
-    agenda.every(blueprint.starter.every, blueprint.starter.proc, envelope);
+      agenda.every(blueprint.starter.every, blueprint.starter.proc, envelope);
+    }
   }
 
   return blueprint;

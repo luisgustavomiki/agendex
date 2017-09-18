@@ -1,9 +1,10 @@
 var assert = require('assert');
 var _ = require('lodash');
+var Procedure = require('../procedure.js');
 
 module.exports = function(agenda) {
-  var procedure = require('procedure.js')('ninja.miki.json', agenda);
-
+  var procedure = new Procedure('ninja.miki.json', agenda);
+  
   procedure.define('fromstring', function(envelope, input, done) {
     var data = input;
     

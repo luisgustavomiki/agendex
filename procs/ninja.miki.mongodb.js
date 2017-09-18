@@ -21,6 +21,8 @@ module.exports = function(agenda) {
 
   agenda.define('ninja.miki.mongodb.aggregate', function(job, done) {
     var params = job.attrs.data.params;
+
+    console.log(params.query);
     
     MongoClient.connect(params.mongouri, function(err, db) {
       assert.equal(null, err);

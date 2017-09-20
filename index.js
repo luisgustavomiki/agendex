@@ -38,7 +38,8 @@ agenda.on('ready', function() {
 		blueprint: "blueprint.name", // name of the orchestration the envelope is running.
 		params: {}, // params passed from the configuration to the procedure, changes every proc call throughout the orchestration run
 		step: 0, // current step this envelope has progressed through the orchestration/blueprint 
-		data: {} // current data from the envelope
+		data: {}, // current data from the envelope
+    filters: {} // filters for multi purpose
 	}
 
   .: Blueprint Steps :.
@@ -56,6 +57,15 @@ agenda.on('ready', function() {
       specific_parameter_3: { ~data } # fetch from data itself
       specific_parameter_4: { ~xpath: { ~source: ~data, ~path: "/bookstore/book/title" } }
       specific_parameter_4: { ~jpath: { ~source: { ~filter: 1 }, ~path: { ~data } } }
+
+  .: Special Parameters :.
+
+    params: 
+      ~source: { ~data } # downstream is from data
+      # the source might be anything from parameter resolving
+      ~target: { ~data } # forward downstream goes to data, same as nothing at all
+      ~target: { ~filter: "foobar" } # forward downstream goes to 'foobar' filter
+      ~target: { ~void } # sends to nowhere
 */
 
 function execute(envelope, blueprint_name, step) {

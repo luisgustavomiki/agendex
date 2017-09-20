@@ -18,7 +18,7 @@ module.exports = class {
 
       // Resolving 'source' param into /input/ so we can 
       // push it into the downstream variable
-      var input = resolveParameter(params.source);
+      var input = resolveParameter(params['~source']);
       if(!input) {
         // if there isnt any set for source, expect it to
         // be from 'data' field in envelope
@@ -41,9 +41,29 @@ module.exports = class {
       // we set the data in the envelope as the only 
       // parameter for that callback and then call the actual
       // agenda /done/ callback :)
-      code(job.attrs.data, function(downstream) {
-        // TODO update filters
-        job.attrs.data.data = downstream;
+      code(envelope.data, envelope.filters, envelope.params, function(downstream, filters) {
+        // update filters
+        envelope.filters = filters;
+
+        if(params['~target']) {
+          var target = params['~target'];
+          // change target based on param
+          if(_.isObject(target)) {
+            if(target['~data']) {
+              envelope.data = downstream;
+            } else if(target['~filter']) {
+              envelope.filters[target['~filter']] = downstream;
+            } else if(target['~void']) {
+              // do nothing
+            } else {
+              // TODO throw exception
+            }
+          } else {
+            // TODO throw exception
+          }
+        } else {
+          envelope.data = downstream;  
+        }
         done();
       });
     });
@@ -75,7 +95,9 @@ function resolveParameter(input, envelope) {
       }
 
       if(key == "~jpath") {
-        
+        var source = resolveParameter(value['~source']);
+        var path = resolveParameter(value['path']);
+        // TODO add json path
       }
     }
   }

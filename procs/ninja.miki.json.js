@@ -11,26 +11,7 @@ module.exports = function(agenda) {
     done(data, filters);
   });
 
-  procedure.define('pick', function(envelope, input, done) {
-
+  procedure.define('pick', function(data, filters, params, done) {
+    done(data, filters);
   });
-
-  agenda.define('ninja.miki.json.fromstring', function(job, done) {
-    
-  }); 
-
-/*
-    - proc: "ninja.miki.json.pickby"
-      params:
-        criteria: ['']
-*/ 
-  agenda.define('ninja.miki.json.pick', function(job, done) {
-    var params = job.attrs.data.params;
-    var data = job.attrs.data.data;
-    
-    assert(_.isString(data));
-    data = JSON.parse(data);
-    done();
-  }); 
-
 }

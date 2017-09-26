@@ -56,7 +56,7 @@ agenda.on('ready', function() {
       specific_parameter_2: { ~filter: "1" } # indicate agendex to fetch from filter
       specific_parameter_3: { ~data } # fetch from data itself
       specific_parameter_4: { ~xpath: { ~source: ~data, ~path: "/bookstore/book/title" } }
-      specific_parameter_4: { ~jpath: { ~source: { ~filter: 1 }, ~path: { ~data } } }
+      specific_parameter_4: { ~jpath: { ~source: { ~filter: 1 }, ~path: { ~data }, ~default: "eitcha_lele" } }
 
   .: Special Parameters :.
 

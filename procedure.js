@@ -32,6 +32,8 @@ module.exports = class {
         params[key] = resolveParameter(value);
       });
 
+      // TODO chance from simple loop to tree resolving
+
       // when the defined job is called, after all the
       // setting up we did, finally call the procedure
       // code
@@ -96,8 +98,10 @@ function resolveParameter(input, envelope) {
 
       if(key == "~jpath") {
         var source = resolveParameter(value['~source']);
-        var path = resolveParameter(value['path']);
-        // TODO add json path
+        var path = resolveParameter(value['~path']);
+        var default = resolveParameter(value['~default']);
+        
+        return _.get(source, path, default);
       }
     }
   }

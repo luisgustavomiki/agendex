@@ -28,9 +28,45 @@ module.exports = class {
       // resolving parameters
       // the 'resolveParameter' function is recursive so
       // we can do pretty much any combination of ~codes
+      // note that parameters may be nested, so we gotta
+      // resolve that
+
+      // this means the following will work: 
+      // var params = {'test': {'~data':null}, 'b': [3, 4, {'~filter': 'foo'}]};
+      // var envelope = {'filters': {'foo': 'bar'}, 'data': 'o felipe neto eh um bosta'};
+      // *do the magic*
+      // => { test: 'o felipe neto eh um bosta', b: [ 3, 4, 'bar' ] }
+
       _.forOwn(params, function(value, key) {
-        params[key] = resolveParameter(value);
+        params[key] = find_tilde_decls(value, function(object) { return resolveParameter(object, envelope); });
       });
+
+      function find_tilde_decls(object, cb) {
+        // if the given root parameter value is an array,
+        // recursively call this and pass the cb for
+        // tilde resolving.
+        if(_.isArray(object)) { 
+          return object.map(function(value) {
+            return find_tilde_decls(value, cb);
+          });
+        } else if(_.isObject(object)) {
+          var entries = _.toPairs(object);
+          var key = entries[0][0];
+
+          // means it is a tilde directive
+          if(key.charAt(0) == '~') {
+            return cb(object);
+          } else {
+            return _.mapValues(object, function(m) {
+              return find_tilde_decls(m, cb);
+            });
+          }
+        } else {
+          // in case it is a primitive, no need to call
+          // cb
+          return object;
+        }
+      }
 
       // TODO chance from simple loop to tree resolving
 
@@ -81,7 +117,7 @@ function resolveParameter(input, envelope) {
       var value = entries[0][1];
 
       if(key == "~data") {
-        return resolveParameter(envelope.data);
+        return resolveParameter(envelope.data); 
       }
 
       if(key == "~filter") {
@@ -99,9 +135,9 @@ function resolveParameter(input, envelope) {
       if(key == "~jpath") {
         var source = resolveParameter(value['~source']);
         var path = resolveParameter(value['~path']);
-        var default = resolveParameter(value['~default']);
+        var ddefault = resolveParameter(value['~default']);
         
-        return _.get(source, path, default);
+        return _.get(source, path, ddefault);
       }
     }
   }

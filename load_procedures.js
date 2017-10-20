@@ -23,5 +23,6 @@ function getProcsList() {
 }
 
 function loadProc(agenda, file_path) {
+  // TODO treat invalid script i.e. empty files causes error
   require(file_path)(agenda);
 }

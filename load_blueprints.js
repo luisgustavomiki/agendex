@@ -33,7 +33,8 @@ function loadBlueprint(agenda, file_path) {
       var envelope = { 
         blueprint: blueprint.name, 
         params: blueprint.starter.params,
-        step: 0
+        step: 0,
+        filters: {}
       };
 
       agenda.every(blueprint.starter.every, blueprint.starter.proc, envelope);

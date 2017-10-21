@@ -138,6 +138,9 @@ agenda.on('complete', function(job) {
   var envelope = job.attrs.data;
   var blueprint = blueprintRepository[envelope.blueprint];  
 
+  // this mess below is because of the dislocated
+  // index between a step within the blueprint vs
+  // the overall steps ignoring the starter proc
   var step_before = envelope.step; 
   var actual_step_before = step_before - 1; // proc array step
 

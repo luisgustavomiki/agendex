@@ -18,11 +18,15 @@ module.exports = class {
 
       // Resolving 'source' param into /input/ so we can 
       // push it into the downstream variable
-      var input = resolveParameter(params['~source']);
-      if(!input) {
-        // if there isnt any set for source, expect it to
-        // be from 'data' field in envelope
-        input = envelope.data;
+      try {
+        var input = resolveParameter(params['~source'], envelope);
+        if(!input) {
+          // if there isnt any set for source, expect it to
+          // be from 'data' field in envelope
+          input = envelope.data;
+        }
+      } catch (err) {
+        console.log(err);
       }
 
       // resolving parameters
@@ -37,9 +41,15 @@ module.exports = class {
       // *do the magic*
       // => { test: 'o felipe neto eh um bosta', b: [ 3, 4, 'bar' ] }
 
-      _.forOwn(params, function(value, key) {
-        params[key] = find_tilde_decls(value, function(object) { return resolveParameter(object, envelope); });
-      });
+      try {
+        _.forOwn(params, function(value, key) {
+          if(key.charAt(0) !== '~') {
+            params[key] = find_tilde_decls(value, function(object) { return resolveParameter(object, envelope); });  
+          }          
+        });
+      } catch (err) {
+        console.log(err);
+      }
 
       function find_tilde_decls(object, cb) {
         // if the given root parameter value is an array,
@@ -79,31 +89,39 @@ module.exports = class {
       // we set the data in the envelope as the only 
       // parameter for that callback and then call the actual
       // agenda /done/ callback :)
-      code(input, envelope.filters, params, function(downstream, filters) {
-        // update filters
-        envelope.filters = filters;
+      try {
+        code(input, envelope.filters, params, function(downstream, filters) {
+          try {
+            // update filters
+            envelope.filters = filters;
 
-        if(params['~target']) {
-          var target = params['~target'];
-          // change target based on param
-          if(_.isObject(target)) {
-            if(target['~data']) {
-              envelope.data = downstream;
-            } else if(target['~filter']) {
-              envelope.filters[target['~filter']] = downstream;
-            } else if(target['~void']) {
-              // do nothing
+            if(params['~target']) {
+              var target = params['~target'];
+              // change target based on param
+              if(_.isObject(target)) {
+                if(target['~data']) {
+                  envelope.data = downstream;
+                } else if(target['~filter']) {
+                  envelope.filters[target['~filter']] = downstream;
+                } else if(target['~void']) {
+                  // do nothing
+                } else {
+                  // TODO throw exception
+                }
+              } else {
+                // TODO throw exception
+              }
             } else {
-              // TODO throw exception
+              envelope.data = downstream;  
             }
-          } else {
-            // TODO throw exception
+            done();
+          } catch(err) {
+            console.log(err);
           }
-        } else {
-          envelope.data = downstream;  
-        }
-        done();
-      });
+        });
+      } catch (err) {
+        console.log(err);
+      }
     });
   }
 }

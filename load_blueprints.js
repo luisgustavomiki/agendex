@@ -4,6 +4,7 @@
 
 const yaml = require('js-yaml');
 const fs = require('fs'); 
+const http = require('./httpserver.js')(3000); // TODO move port definition to config file
 
 const blueprintsFolder = './blueprints/';
 
@@ -37,6 +38,16 @@ function loadBlueprint(agenda, file_path) {
       };
 
       agenda.every(blueprint.starter.every, blueprint.starter.proc, envelope);
+    } else if(blueprint.starter.method === 'receiver') {
+      http.handle(blueprint.starter.path, (request, response) => {
+        var envelope = { 
+          blueprint: blueprint.name, 
+          params: blueprint.starter.params,
+          step: 0
+        };
+
+        agenda.once(blueprint.starter.proc, envelope);
+      });
     }
   }
 

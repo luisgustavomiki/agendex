@@ -79,7 +79,7 @@ module.exports = class {
       // we set the data in the envelope as the only 
       // parameter for that callback and then call the actual
       // agenda /done/ callback :)
-      code(envelope.data, envelope.filters, envelope.params, function(downstream, filters) {
+      code(input, envelope.filters, params, function(downstream, filters) {
         // update filters
         envelope.filters = filters;
 

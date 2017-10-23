@@ -11,6 +11,7 @@
   "dependencies": {
     "agenda": "^0.9.1",
     "async": "^2.5.0",
+    "body-parser": "^1.18.2",
     "express": "^4.16.2",
     "fb": "^2.0.0",
     "js-yaml": "^3.9.1",

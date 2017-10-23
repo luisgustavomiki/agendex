@@ -16,67 +16,66 @@ module.exports = class {
       var envelope = job.attrs.data;
       var params = envelope.params;
 
-      // Resolving 'source' param into /input/ so we can 
-      // push it into the downstream variable
+      // Parameter processing.
       try {
+        // Resolving 'source' param into /input/ so we can 
+        // push it into the downstream variable
         var input = resolveParameter(params['~source'], envelope);
         if(!input) {
           // if there isnt any set for source, expect it to
           // be from 'data' field in envelope
           input = envelope.data;
         }
-      } catch (err) {
-        console.log(err);
-      }
 
-      // resolving parameters
-      // the 'resolveParameter' function is recursive so
-      // we can do pretty much any combination of ~codes
-      // note that parameters may be nested, so we gotta
-      // resolve that
+        // resolving parameters
+        // the 'resolveParameter' function is recursive so
+        // we can do pretty much any combination of ~codes
+        // note that parameters may be nested, so we gotta
+        // resolve that
 
-      // this means the following will work: 
-      // var params = {'test': {'~data':null}, 'b': [3, 4, {'~filter': 'foo'}]};
-      // var envelope = {'filters': {'foo': 'bar'}, 'data': 'o felipe neto eh um bosta'};
-      // *do the magic*
-      // => { test: 'o felipe neto eh um bosta', b: [ 3, 4, 'bar' ] }
-
-      try {
+        // this means the following will work: 
+        // var params = {'test': {'~data':null}, 'b': [3, 4, {'~filter': 'foo'}]};
+        // var envelope = {'filters': {'foo': 'bar'}, 'data': 'o felipe neto eh um bosta'};
+        // *do the magic*
+        // => { test: 'o felipe neto eh um bosta', b: [ 3, 4, 'bar' ] }
         _.forOwn(params, function(value, key) {
           if(key.charAt(0) !== '~') {
             params[key] = find_tilde_decls(value, function(object) { return resolveParameter(object, envelope); });  
-          }          
-        });
-      } catch (err) {
-        console.log(err);
-      }
-
-      function find_tilde_decls(object, cb) {
-        // if the given root parameter value is an array,
-        // recursively call this and pass the cb for
-        // tilde resolving.
-        if(_.isArray(object)) { 
-          return object.map(function(value) {
-            return find_tilde_decls(value, cb);
-          });
-        } else if(_.isObject(object)) {
-          var entries = _.toPairs(object);
-          var key = entries[0][0];
-
-          // means it is a tilde directive
-          if(key.charAt(0) == '~') {
-            return cb(object);
-          } else {
-            return _.mapValues(object, function(m) {
-              return find_tilde_decls(m, cb);
-            });
           }
-        } else {
-          // in case it is a primitive, no need to call
-          // cb
-          return object;
+        });
+
+        function find_tilde_decls(object, cb) {
+          // if the given root parameter value is an array,
+          // recursively call this and pass the cb for
+          // tilde resolving.
+          if(_.isArray(object)) { 
+            return object.map(function(value) {
+              return find_tilde_decls(value, cb);
+            });
+          } else if(_.isObject(object)) {
+            var entries = _.toPairs(object);
+            var key = entries[0][0];
+
+            // means it is a tilde directive
+            if(key.charAt(0) == '~') {
+              return cb(object);
+            } else {
+              return _.mapValues(object, function(m) {
+                return find_tilde_decls(m, cb);
+              });
+            }
+          } else {
+            // in case it is a primitive, no need to call
+            // cb
+            return object;
+          }
         }
+      } catch (err) {
+        console.error(`There has been an error in parameter processing for ${envelope.blueprint}/${envelope.uuid}/${name}. This job will continue running.`);
+        console.error(err);
       }
+
+      
 
       // TODO chance from simple loop to tree resolving
 
@@ -120,7 +119,13 @@ module.exports = class {
           }
         });
       } catch (err) {
+        console.error(`There has been an error in proc run for ${envelope.blueprint}/${envelope.uuid}/${name}. This job is now dead.`);
         console.log(err);
+
+        envelope.fail = true;
+        envelope.error = err;
+        
+        done();
       }
     });
   }

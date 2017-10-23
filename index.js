@@ -13,6 +13,16 @@ const STEP_TYPE_INVALID = 0;
 const STEP_TYPE_PROC = 1;
 const STEP_TYPE_BREAK_ARRAY = 2;
 
+// HTTPServer stuff 
+const HTTPServer = require('./httpserver.js');
+const HTTP_SERVER_PORT = 3000;
+
+var httpServer = new HTTPServer(HTTP_SERVER_PORT);
+
+var httpResponseServingIncrement = 0;
+var httpResponseServingResponseObjects = {};
+var httpResponseServingPathBlueprintMap = {};
+
 /* 
   .: Initialization :.
 */
@@ -24,11 +34,58 @@ agenda.on('ready', function() {
   var proceduresRepository = require(load_procedures_script)(agenda);
   blueprintRepository = require(load_blueprints_script)(agenda);
 
+  Object.values(blueprintRepository).forEach(startupBlueprint);
+
   console.log("Lodaded %d blueprints.", _.size(blueprintRepository));
   console.log("Lodaded %d procedures.", _.size(proceduresRepository));
 
   agenda.start();
 });
+
+function startupBlueprint(blueprint) {
+  if(blueprint.enabled) {
+    if(blueprint.starter.method === 'polling') {
+      var envelope = { 
+        blueprint: blueprint.name, 
+        params: blueprint.starter.params,
+        step: 0,
+        filters: {}
+      };
+
+      agenda.every(blueprint.starter.every, blueprint.starter.proc, envelope);
+    } else if(blueprint.starter.method === 'receiver') {
+      httpResponseServingPathBlueprintMap[blueprint.starter.path] = blueprint;
+      httpServer.handle(blueprint.starter.path, receive);
+    }
+  }
+}
+
+function receive(request, response) {
+  console.log(request.body);
+
+  var blueprint = httpResponseServingPathBlueprintMap[request.originalUrl];
+  var uuid = uuidv4();
+
+  var envelope = { 
+    uuid: uuid,
+    blueprint: blueprint.name, 
+    params: blueprint.starter.params,
+    step: 0,
+    filters: {},
+    data: request.body
+  };
+
+  var synchronous = blueprint.starter.synchronous;
+  if(!synchronous) {
+    response.status(202);
+    response.send('OK');
+  } else {
+    envelope.responseServing = ++httpResponseServingIncrement;
+    httpResponseServingResponseObjects[envelope.responseServing] = response;
+  }
+
+  agenda.now(blueprint.starter.proc, envelope);  
+}
 
 /* 
 	.: Envelope Object Structure :. 

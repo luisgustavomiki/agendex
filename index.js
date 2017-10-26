@@ -19,8 +19,7 @@ const HTTP_SERVER_PORT = 3000;
 
 var httpServer = new HTTPServer(HTTP_SERVER_PORT);
 
-var httpResponseServingIncrement = 0;
-var httpResponseServingResponseObjects = {};
+var responseServings = [];
 var httpResponseServingPathBlueprintMap = {};
 
 /* 
@@ -80,8 +79,14 @@ function receive(request, response) {
     response.status(202);
     response.send('OK');
   } else {
-    envelope.responseServing = ++httpResponseServingIncrement;
-    httpResponseServingResponseObjects[envelope.responseServing] = response;
+    var response_serving = {
+      uuids: [uuid],
+      start: Date.now(),
+      response: response
+    };
+
+    responseServings.push(response_serving);
+    envelope.responseServing = responseServings.indexOf(response_serving);
   }
 
   agenda.now(blueprint.starter.proc, envelope);  
@@ -152,6 +157,8 @@ function execute(envelope, blueprint_name, step) {
   if(step_type == STEP_TYPE_BREAK_ARRAY) {
     assert(_.isArray(envelope.data));
 
+    // TODO add handling for receiver synchronous requests
+
     // keeping in record the old uuid
     envelope.parent_uuid = envelope.uuid;
     var whole_data = envelope.data; 
@@ -210,6 +217,25 @@ agenda.on('complete', function(job) {
     execute(envelope, blueprint.name, step_after);
   } else {
     console.log("Event %s (%s) is finished.", envelope.uuid, envelope.blueprint);
+
+    if(envelope.responseServing != undefined) {
+      var response_serving = responseServings[envelope.responseServing];
+      var idx = response_serving.uuids.indexOf(envelope.uuid);
+
+      if(idx > -1) {
+        response_serving.uuids.splice(idx, 1);
+      }
+
+      if(response_serving.uuids.length === 0) {
+        response_serving.response.send(envelope.data);
+
+        var seconds = (Date.now() - response_serving.start) / 1000;
+        console.log(`Response ${envelope.responseServing} has been served for this event. Took ${seconds} seconds.`);
+
+        delete envelope.responseServing;
+        responseServings.splice(response_serving, 1);
+      }
+    }
   }
 });
 
